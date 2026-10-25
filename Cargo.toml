@@ -1,0 +1,36 @@
+[package]
+name = "tcp-info-analogs"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77.0"
+license = "MIT OR Apache-2.0"
+description = "Cross-platform normalized TCP connection metrics and congestion diagnostics (Linux, macOS, Windows)"
+repository = "https://github.com/your-org/tcp-info-analogs"
+keywords = ["tcp", "networking", "metrics", "tokio", "congestion"]
+categories = ["network-programming", "os::operating-system-apis"]
+
+[features]
+default = []
+tokio = ["dep:tokio"]
+socket2 = ["dep:socket2"]
+
+[dependencies]
+# Upper bound keeps the 1.77 MSRV job on tokio 1.53.x (MSRV 1.71).
+# tokio 1.54 raised its MSRV to 1.85. Lift both bounds together.
+tokio = { version = ">=1.30, <1.54", optional = true, features = ["net"] }
+socket2 = { version = "0.6", optional = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.150"
+
+[target.'cfg(windows)'.dependencies]
+# Win32_System_IO is required: WSAIoctl takes an OVERLAPPED pointer.
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_Networking_WinSock",
+    "Win32_System_IO"
+] }
+
+[package.metadata.docs.rs]
+all-features = true
+targets = ["x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "aarch64-apple-darwin"]
