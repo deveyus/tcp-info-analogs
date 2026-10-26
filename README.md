@@ -1,12 +1,21 @@
 # tcp-info-analogs
 
-Zero-allocation, cross-platform normalized TCP connection health and
-congestion metrics for Linux, macOS, and Windows.
+[![docs.rs](https://img.shields.io/docsrs/tcp-info-analogs)](https://docs.rs/tcp-info-analogs)
+[![CI](https://github.com/deveyus/tcp-info-analogs/actions/workflows/ci.yml/badge.svg)](https://github.com/deveyus/tcp-info-analogs/actions/workflows/ci.yml)
+![MSRV 1.77](https://img.shields.io/badge/MSRV-1.77-orange)
 
-Query SRTT, RTT variance, loss recovery, bytes/packets in flight,
-retransmit counts, sender MSS, and TCP state through one extension
-trait, on any of `std::net::TcpStream`, `socket2::Socket`, or
-`tokio::net::TcpStream`.
+The portable analog of Linux's `TCP_INFO`: TCP connection health and
+congestion metrics — SRTT, RTT variance, loss recovery, bytes and packets
+in flight, retransmit counts, sender MSS, and TCP state — through one
+extension trait on Linux, macOS, and Windows.
+
+Cross-platform `TCP_INFO` is the problem nobody wants to hand-roll:
+Linux exposes `getsockopt(TCP_INFO)`, macOS a different option code
+backed by an XNU-only struct, and Windows an entirely different
+`WSAIoctl` payload, each with different field availability and units.
+This crate does the syscall dance per platform, decodes the raw kernel
+bytes with verified offsets, and normalizes what overlaps — then
+documents honestly what does not.
 
 ```rust
 use tcp_info_analogs::TcpInfoExt;
@@ -14,6 +23,11 @@ use tcp_info_analogs::TcpInfoExt;
 let metrics = std::net::TcpStream::connect("example.com:443")?.tcp_metrics()?;
 println!("srtt = {:?}", metrics.rtt);
 ```
+
+Works on `std::net::TcpStream`, plus `socket2::Socket` and
+`tokio::net::TcpStream` behind features. Unsupported Unix targets
+compile and return `TcpInfoError::UnsupportedPlatform` at call time.
+
 
 ## Design
 
@@ -53,8 +67,7 @@ println!("srtt = {:?}", metrics.rtt);
 | `retransmit_bytes` | not exposed | lifetime | wraps at `u32::MAX` |
 
 `bytes_in_flight` means different things per platform; the metric docs
-carry the divergence warning inline. Unsupported Unix targets compile
-and return `TcpInfoError::UnsupportedPlatform` at call time.
+carry the divergence warning inline.
 
 ## Features
 
@@ -71,6 +84,9 @@ sample count   : 956717 spanning 2s
 errors         : 0
 ```
 
+(Measured on one host; treat as shape, not a promise. The ceil value is
+the getsockopt round trip, not the crate.)
+
 Instruction-count baselines (`scripts/bench_iai.sh`, iai-callgrind) gate
 decode-path regressions in CI. The `benches/` workspace member is
 documented internally; the 1.77 MSRV gate is scoped to the library and
@@ -79,9 +95,10 @@ tests because the bench chain requires a newer toolchain.
 ## MSRV and CI
 
 MSRV is 1.77 (`offset_of!` era) and enforced with a committed
-`Cargo.lock` and `--locked`. CI (`.github/workflows/ci.yml`) runs the
-test matrix on all three OSes, clippy with `-D warnings`, rustfmt,
-the MSRV gate, and the iai instruction-count job.
+`Cargo.lock` and `--locked`. CI runs the test matrix on all three OSes,
+clippy with `-D warnings`, rustfmt, the MSRV gate, and the iai
+instruction-count job:
+[.github/workflows/ci.yml](.github/workflows/ci.yml).
 
 ## Roadmap
 

@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.77.0"
 license = "MIT OR Apache-2.0"
-description = "Cross-platform normalized TCP connection metrics and congestion diagnostics (Linux, macOS, Windows)"
+description = "Portable analog of TCP_INFO: normalized TCP connection metrics across Linux, macOS, and Windows"
 repository = "https://github.com/deveyus/tcp-info-analogs"
-keywords = ["tcp", "networking", "metrics", "tokio", "congestion"]
+keywords = ["tcp", "networking", "metrics", "congestion", "tcp-info"]
 categories = ["network-programming", "os::operating-system-apis"]
 
 [features]
