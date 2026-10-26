@@ -29,7 +29,15 @@ pub fn fetch_metrics<S: AsRawFd>(s: &S) -> Result<TcpMetrics, TcpInfoError> {
         return Err(TcpInfoError::Io(err));
     }
 
-    // The kernel cannot report more bytes than the supplied buffer.
+    // The kernel cannot report more bytes than the supplied buffer, so the
+    // clamp keeps `written` at or below BUFFER_LEN and `get` cannot fail.
+    // A hypothetical None maps to a truthful Io error rather than a panic.
     let written = (len as usize).min(BUFFER_LEN);
-    crate::decode::linux::decode_linux(&buf[..written])
+    let owned = buf.get(..written).ok_or_else(|| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "kernel reported more bytes than the supplied buffer",
+        )
+    })?;
+    crate::decode::linux::decode_linux(owned)
 }

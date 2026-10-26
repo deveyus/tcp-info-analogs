@@ -1,3 +1,7 @@
+// Test suite: fixtures are known-good buffers, so unwrap() on decode calls
+// and assert! on unwrappable values is the intended style here.
+#![allow(clippy::unwrap_used, clippy::expect_used, clippy::indexing_slicing)]
+
 //! Pure byte fixture tests for the Linux decoder.
 
 use std::time::Duration;

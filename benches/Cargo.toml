@@ -1,0 +1,20 @@
+[package]
+name = "tcp-info-benches"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.81.0"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dev-dependencies]
+iai-callgrind = "0.16"
+tcp-info-analogs = { path = ".." }
+
+[[bench]]
+name = "decode"
+harness = false
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+indexing_slicing = "deny"

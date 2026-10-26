@@ -2,6 +2,7 @@
 //!
 //! Layout pinned to `TCP_INFO_v0` from the Windows SDK `mstcpip.h`.
 
+use super::{read_i32, read_u32};
 use crate::{TcpInfoError, TcpMetrics, TcpState};
 use std::time::Duration;
 
@@ -40,11 +41,11 @@ pub fn decode_windows(buf: &[u8]) -> Result<TcpMetrics, TcpInfoError> {
     //   RttUs at 20..24
     //   BytesInFlight at 28..32
     //   BytesRetrans at 68..72
-    let state_raw = i32::from_ne_bytes(buf[0..4].try_into().unwrap());
-    let mss = u32::from_ne_bytes(buf[4..8].try_into().unwrap());
-    let rtt_us = u32::from_ne_bytes(buf[20..24].try_into().unwrap());
-    let bytes_in_flight = u32::from_ne_bytes(buf[28..32].try_into().unwrap());
-    let bytes_retrans = u32::from_ne_bytes(buf[68..72].try_into().unwrap());
+    let state_raw = read_i32(buf, 0)?;
+    let mss = read_u32(buf, 4)?;
+    let rtt_us = read_u32(buf, 20)?;
+    let bytes_in_flight = read_u32(buf, 28)?;
+    let bytes_retrans = read_u32(buf, 68)?;
 
     Ok(TcpMetrics {
         rtt: Duration::from_micros(rtt_us as u64),

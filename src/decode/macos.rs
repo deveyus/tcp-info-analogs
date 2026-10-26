@@ -4,6 +4,7 @@
 //! (`bsd/netinet/tcp.h`). The fields used here are stable across
 //! xnu-7195 through xnu main.
 
+use super::{read_u32, read_u64, read_u8};
 use crate::{TcpInfoError, TcpMetrics, TcpState};
 use std::time::Duration;
 
@@ -54,14 +55,14 @@ pub fn decode_macos(buf: &[u8]) -> Result<TcpMetrics, TcpInfoError> {
     //   tcpi_txbytes at 64..72
     //   tcpi_txretransmitbytes at 72..80
     //   tcpi_txretransmitpackets at 104..112
-    let state = map_darwin_state(buf[0]);
-    let flags = u32::from_ne_bytes(buf[8..12].try_into().unwrap());
-    let maxseg = u32::from_ne_bytes(buf[16..20].try_into().unwrap());
-    let snd_sbbytes = u32::from_ne_bytes(buf[32..36].try_into().unwrap());
-    let srtt_ms = u32::from_ne_bytes(buf[44..48].try_into().unwrap());
-    let rttvar_ms = u32::from_ne_bytes(buf[48..52].try_into().unwrap());
-    let tx_retrans_bytes = u64::from_ne_bytes(buf[72..80].try_into().unwrap());
-    let tx_retrans_packets = u64::from_ne_bytes(buf[104..112].try_into().unwrap());
+    let state = map_darwin_state(read_u8(buf, 0)?);
+    let flags = read_u32(buf, 8)?;
+    let maxseg = read_u32(buf, 16)?;
+    let snd_sbbytes = read_u32(buf, 32)?;
+    let srtt_ms = read_u32(buf, 44)?;
+    let rttvar_ms = read_u32(buf, 48)?;
+    let tx_retrans_bytes = read_u64(buf, 72)?;
+    let tx_retrans_packets = read_u64(buf, 104)?;
 
     let is_retransmitting = (flags & TCPCI_FLAG_LOSSRECOVERY) != 0;
 

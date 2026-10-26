@@ -1,5 +1,6 @@
 //! Linux `getsockopt(SOL_TCP, TCP_INFO)` byte decoder.
 
+use super::{read_u32, read_u8};
 use crate::{TcpInfoError, TcpMetrics, TcpState};
 use std::time::Duration;
 
@@ -33,8 +34,8 @@ pub fn decode_linux(buf: &[u8]) -> Result<TcpMetrics, TcpInfoError> {
         });
     }
 
-    let state = map_linux_state(buf[0]);
-    let ca_state = buf[1];
+    let state = map_linux_state(read_u8(buf, 0)?);
+    let ca_state = read_u8(buf, 1)?;
 
     // Offsets verified against uapi/linux/tcp.h:
     //   tcpi_snd_mss at 16..20
@@ -42,13 +43,13 @@ pub fn decode_linux(buf: &[u8]) -> Result<TcpMetrics, TcpInfoError> {
     //   tcpi_rtt at 68..72
     //   tcpi_rttvar at 72..76
     //   tcpi_total_retrans at 100..104
-    let snd_mss = u32::from_ne_bytes(buf[16..20].try_into().unwrap());
-    let unacked = u32::from_ne_bytes(buf[24..28].try_into().unwrap());
-    let rtt_us = u32::from_ne_bytes(buf[68..72].try_into().unwrap());
-    let rttvar_us = u32::from_ne_bytes(buf[72..76].try_into().unwrap());
+    let snd_mss = read_u32(buf, 16)?;
+    let unacked = read_u32(buf, 24)?;
+    let rtt_us = read_u32(buf, 68)?;
+    let rttvar_us = read_u32(buf, 72)?;
 
     let total_retrans = if buf.len() >= 104 {
-        Some(u32::from_ne_bytes(buf[100..104].try_into().unwrap()) as u64)
+        Some(read_u32(buf, 100)? as u64)
     } else {
         None
     };

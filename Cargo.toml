@@ -14,6 +14,16 @@ default = []
 tokio = ["dep:tokio"]
 socket2 = ["dep:socket2"]
 
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+indexing_slicing = "deny"
+
+# The bench suite lives in a separate member so its iai-callgrind chain
+# (derive_more 2.1+, MSRV 1.81) never enters this package's 1.77 builds.
+[workspace]
+members = ["benches"]
+
 [dependencies]
 # Upper bound keeps the 1.77 MSRV job on tokio 1.53.x (MSRV 1.71).
 # tokio 1.54 raised its MSRV to 1.85. Lift both bounds together.

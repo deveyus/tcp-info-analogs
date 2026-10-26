@@ -1,3 +1,7 @@
+// Test suite: the loopback fixture is known-good; unwrap() asserts setup
+// outcomes directly.
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 //! Loopback syscall integration test; runs on every supported host.
 
 #![cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
